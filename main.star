@@ -57,6 +57,14 @@ NOVO_WEB_PORT_NAME = NOVU_WEB_SERVICE_NAME
 NOVU_WEB_PROTOCOL_NAME = "http"
 NOVU_WEB_PORT = 4200
 
+# NOVU Notification demo
+NOVU_WEB_IMAGE = "ghcr.io/novuhq/novu/web:%s" % NOVU_VERSION
+NOVU_WEB_SERVICE_NAME = "novu_web"
+NOVO_WEB_PORT_NAME = NOVU_WEB_SERVICE_NAME
+NOVU_WEB_PROTOCOL_NAME = "http"
+NOVU_WEB_PORT = 4200
+
+
 WAIT_DISABLE = None
 
 # NOVU API
@@ -116,7 +124,9 @@ def run(plan, args):
                 "REDIS_DB_INDEX": str(NOVU_REDIS_DB_INDEX),
                 "PORT": str(NOVU_API_DEFAULT_PORT),
                 "DISABLE_USER_REGISTRATION": "false"
-
+            },
+            public_ports={
+                NOVO_API_PORT_NAME: PortSpec(number=NOVU_API_DEFAULT_PORT),
             }
         ),
     )
@@ -134,6 +144,17 @@ def run(plan, args):
                 "REDIS_HOST": redis_run_output["hostname"],
                 "REDIS_PORT": str(redis_run_output["client-port"]),
                 "REDIS_DB_INDEX": str(NOVU_REDIS_DB_INDEX),
+                "REDIS_CACHE_SERVICE_HOST": redis_run_output["hostname"],
+                "REDIS_CACHE_SERVICE_PORT": str(redis_run_output["client-port"]),
+                "S3_LOCAL_STACK": "http://localhost:4566",
+                "S3_BUCKET_NAME": "novu-local",
+                "S3_REGION": "us-east-1",
+                "AWS_ACCESS_KEY_ID": "test",
+                "AWS_SECRET_ACCESS_KEY": "test",
+                "STORE_ENCRYPTION_KEY": "<ENCRYPTION_KEY_MUST_BE_32_LONG>",
+                "SENTRY_DSN": "",
+                "NEW_RELIC_APP_NAME": "",
+                "NEW_RELIC_LICENSE_KEY": "",
             }
         ),
     )
@@ -156,6 +177,9 @@ def run(plan, args):
                 "MONGO_URL": mongodb_url,
                 "REDIS_HOST": redis_run_output["hostname"],
                 "REDIS_PORT": str(redis_run_output["client-port"]),
+            },
+            public_ports={
+                NOVO_WS_PORT_NAME: PortSpec(number=NOVU_WS_PORT),
             }
         ),
     )
@@ -223,7 +247,7 @@ def run(plan, args):
                 "REACT_APP_WIDGET_EMBED_PATH": widget_embed_path,
                 "REACT_APP_DOCKER_HOSTED_ENV": NOVU_DOCKER_HOSTED,
                 "REACT_APP_WS_URL": ws_url,
-            }
+            },
         ),
     )
 
