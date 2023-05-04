@@ -125,9 +125,9 @@ def run(plan, args):
                 "PORT": str(NOVU_API_DEFAULT_PORT),
                 "DISABLE_USER_REGISTRATION": "false"
             },
-            public_ports={
-                NOVO_API_PORT_NAME: PortSpec(number=NOVU_API_DEFAULT_PORT),
-            }
+            # public_ports={
+            #     NOVO_API_PORT_NAME: PortSpec(number=NOVU_API_DEFAULT_PORT),
+            # }
         ),
     )
 
@@ -178,9 +178,9 @@ def run(plan, args):
                 "REDIS_HOST": redis_run_output["hostname"],
                 "REDIS_PORT": str(redis_run_output["client-port"]),
             },
-            public_ports={
-                NOVO_WS_PORT_NAME: PortSpec(number=NOVU_WS_PORT),
-            }
+            # public_ports={
+            #     NOVO_WS_PORT_NAME: PortSpec(number=NOVU_WS_PORT),
+            # }
         ),
     )
     ws_url = getUrl(novu_ws_service, NOVO_WS_PORT_NAME)
@@ -203,7 +203,10 @@ def run(plan, args):
                 "REACT_APP_WS_URL": ws_url,
                 "REACT_APP_ENVIRONMENT": NOVU_NODE_ENV,
                 "WIDGET_CONTEXT_PATH": NOVU_WIDGET_CONTEXT_PATH,
-            }
+            },
+            # public_ports={
+            #     NOVO_WIDGET_PORT_NAME: PortSpec(number=NOVU_WIDGET_PORT),
+            # }
         ),
     )
     widget_url = getUrl(novu_widget_service, NOVO_WIDGET_PORT_NAME)
@@ -223,9 +226,9 @@ def run(plan, args):
             env_vars={
                 "WIDGET_URL": widget_url,
             },
-            public_ports={
-                NOVO_EMBED_PORT_NAME: PortSpec(number=NOVU_EMBED_PORT),
-            }
+            # public_ports={
+            #     NOVO_EMBED_PORT_NAME: PortSpec(number=NOVU_EMBED_PORT),
+            # }
         ),
     )
 
