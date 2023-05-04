@@ -172,7 +172,7 @@ def run(plan, args):
                 ),
             },
             env_vars={
-                "PORT": str(NOVU_API_DEFAULT_PORT),
+                "PORT": str(NOVU_WS_PORT),
                 "NODE_ENV": NOVU_NODE_ENV,
                 "MONGO_URL": mongodb_url,
                 "REDIS_HOST": redis_run_output["hostname"],
