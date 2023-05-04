@@ -222,14 +222,18 @@ def run(plan, args):
             },
             env_vars={
                 "WIDGET_URL": widget_url,
+            },
+            public_ports={
+                NOVO_EMBED_PORT_NAME: PortSpec(number=NOVU_EMBED_PORT),
             }
         ),
     )
 
-    widget_embed_path = widget_url + "/embed.umd.min.js"
+    widget_embed_url = getUrl(novu_embed_service, NOVO_EMBED_PORT_NAME)
+    widget_embed_path = widget_embed_url + "/embed.umd.min.js"
     plan.print(api_root_url)
 
-    # Add Novu Web Service
+    # # Add Novu Web Service
     novu_web_service = plan.add_service(
         name=NOVU_WEB_SERVICE_NAME,
         config=ServiceConfig(
