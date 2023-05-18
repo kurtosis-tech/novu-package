@@ -71,32 +71,23 @@ NOVU_WEB_PORT = 4200
 
 WAIT_DISABLE = None
 
-# NOVU API
-NOVU_ENV_VAR_DEFAULT_NODE_ENV = "local"
-NOVU_ENV_VAR_DEFAULT_API_ROOT_URL = "http://localhost:3000"
-NOVU_ENV_VAR_DEFAULT_DISABLE_USER_REGISTRATION = "false"
-NOVU_ENV_VAR_DEFAULT_API_PORT = "3000"
-NOVU_ENV_VAR_DEFAULT_FRONT_BASE_URL = "http://client:4200"
-NOVU_ENV_VAR_DEFAULT_MONGO_URL = "mongodb://mongodb:27017/novu-db"
-NOVU_ENV_VAR_DEFAULT_REDIS_CACHE_SERVICE_HOST = ""
-NOVU_ENV_VAR_DEFAULT_REDIS_CACHE_SERVICE_PORT = ""
-NOVU_ENV_VAR_DEFAULT_S3_LOCAL_STACK = "http://localhost:4566"
-NOVU_ENV_VAR_DEFAULT_S3_BUCKET_NAME = "novu-local"
-NOVU_ENV_VAR_DEFAULT_S3_REGION = "us-east-1"
-NOVU_ENV_VAR_DEFAULT_AWS_ACCESS_KEY_ID = "test"
-NOVU_ENV_VAR_DEFAULT_AWS_SECRET_ACCESS_KEY = "test"
-NOVU_ENV_VAR_DEFAULT_JWT_SECRET = "your-secret"
-NOVU_ENV_VAR_DEFAULT_WS_CONTEXT_PATH = ""
-NOVU_ENV_VAR_DEFAULT_STORE_ENCRYPTION_KEY = "<ENCRYPTION_KEY_MUST_BE_32_LONG>"
-NOVU_ENV_VAR_DEFAULT_SENTRY_DSN = ""
-NOVU_ENV_VAR_DEFAULT_NEW_RELIC_APP_NAME = ""
-NOVU_ENV_VAR_DEFAULT_NEW_RELIC_LICENSE_KEY = ""
-NOVU_ENV_VAR_DEFAULT_API_CONTEXT_PATH = ""
+# NOVU Shared
+NOVU_DISABLE_USER_REGISTRATION = "false"
+NOVU_FRONT_BASE_URL = "http://client:%d" % NOVU_WEB_PORT
+NOVU_DEFAULT_S3_LOCAL_STACK = "http://localhost:4566"
+NOVU_DEFAULT_S3_BUCKET_NAME = "novu-local"
+NOVU_DEFAULT_S3_REGION = "us-east-1"
+NOVU_DEFAULT_AWS_ACCESS_KEY_ID = "test"
+NOVU_DEFAULT_AWS_SECRET_ACCESS_KEY = "test"
+NOVU_DEFAULT_JWT_SECRET = "your-secret"
+NOVU_DEFAULT_WS_CONTEXT_PATH = ""
+NOVU_DEFAULT_STORE_ENCRYPTION_KEY = "<ENCRYPTION_KEY_MUST_BE_32_LONG>"
+NOVU_DEFAULT_SENTRY_DSN = ""
+NOVU_DEFAULT_NEW_RELIC_APP_NAME = ""
+NOVU_DEFAULT_NEW_RELIC_LICENSE_KEY = ""
+NOVU_DEFAULT_API_CONTEXT_PATH = ""
 
 def run(plan, args):
-
-    FRONT_BASE_URL = NOVU_ENV_VAR_DEFAULT_FRONT_BASE_URL
-
     redis_run_output = redis_module.run(plan, args)
     redis_host = redis_run_output["hostname"]
     redis_port = str(redis_run_output["client-port"])
@@ -114,7 +105,6 @@ def run(plan, args):
         }}
     mongodb_module_output = mongodb_module.run(plan, mongodb_env_vars)
     mongodb_service_port = mongodb_module_output.service.ports['mongodb'].number
-    #mongodb_url = mongodb_module_output.url+NOVU_MONGODB_DB
     mongodb_url = "mongodb://%s:%s@%s:%d/%s" % (
         NOVU_MONGO_USERNAME,
         NOVU_MONGO_PASSWORD,
@@ -124,6 +114,7 @@ def run(plan, args):
     )
     plan.print(mongodb_url)
 
+    mongodb_local_url = "mongodb://localhost:%d/%s" % (mongodb_service_port, NOVU_MONGODB_DB_NAME)
     # create user
     command_create_user = "db.getSiblingDB('%s').createUser({user:'%s', pwd:'%s', roles:[{role:'readWrite',db:'%s'}]});" % (
         NOVU_MONGODB_DB_NAME, NOVU_MONGO_USERNAME, NOVU_MONGO_PASSWORD, NOVU_MONGODB_DB_NAME
@@ -154,11 +145,11 @@ def run(plan, args):
     exec_create_collection = ExecRecipe(
         command=[
             "mongosh",
-            "mongodb://localhost:%d/%s" % (mongodb_service_port, NOVU_MONGODB_DB_NAME),
+            mongodb_local_url,
             "-u",
-            "novu",
+            NOVU_MONGO_USERNAME,
             "-p",
-            "novu",
+            NOVU_MONGO_PASSWORD,
             "-eval",
             command_create_collection
         ],
@@ -187,26 +178,26 @@ def run(plan, args):
             env_vars={
                 "NODE_ENV": NOVU_NODE_ENV,
                 "API_ROOT_URL": "",
-                "DISABLE_USER_REGISTRATION": NOVU_ENV_VAR_DEFAULT_DISABLE_USER_REGISTRATION,
+                "DISABLE_USER_REGISTRATION": NOVU_DISABLE_USER_REGISTRATION,
                 "PORT": str(NOVU_API_PORT),
-                "FRONT_BASE_URL": FRONT_BASE_URL,
+                "FRONT_BASE_URL": NOVU_FRONT_BASE_URL,
                 "MONGO_URL": mongodb_url,
                 "REDIS_HOST": redis_host,
                 "REDIS_PORT": redis_port,
                 "REDIS_DB_INDEX": redis_db_index,
                 "REDIS_CACHE_SERVICE_HOST": redis_host,
                 "REDIS_CACHE_SERVICE_PORT": redis_port,
-                "S3_LOCAL_STACK": NOVU_ENV_VAR_DEFAULT_S3_LOCAL_STACK,
-                "S3_BUCKET_NAME": NOVU_ENV_VAR_DEFAULT_S3_BUCKET_NAME,
-                "S3_REGION": NOVU_ENV_VAR_DEFAULT_S3_REGION,
-                "AWS_ACCESS_KEY_ID": NOVU_ENV_VAR_DEFAULT_AWS_ACCESS_KEY_ID,
-                "AWS_SECRET_ACCESS_KEY": NOVU_ENV_VAR_DEFAULT_AWS_SECRET_ACCESS_KEY,
-                "JWT_SECRET": NOVU_ENV_VAR_DEFAULT_JWT_SECRET,
-                "STORE_ENCRYPTION_KEY": NOVU_ENV_VAR_DEFAULT_STORE_ENCRYPTION_KEY,
-                "SENTRY_DSN": NOVU_ENV_VAR_DEFAULT_SENTRY_DSN,
-                "NEW_RELIC_APP_NAME": NOVU_ENV_VAR_DEFAULT_NEW_RELIC_APP_NAME,
-                "NEW_RELIC_LICENSE_KEY": NOVU_ENV_VAR_DEFAULT_NEW_RELIC_LICENSE_KEY,
-                "API_CONTEXT_PATH": NOVU_ENV_VAR_DEFAULT_API_CONTEXT_PATH
+                "S3_LOCAL_STACK": NOVU_DEFAULT_S3_LOCAL_STACK,
+                "S3_BUCKET_NAME": NOVU_DEFAULT_S3_BUCKET_NAME,
+                "S3_REGION": NOVU_DEFAULT_S3_REGION,
+                "AWS_ACCESS_KEY_ID": NOVU_DEFAULT_AWS_ACCESS_KEY_ID,
+                "AWS_SECRET_ACCESS_KEY": NOVU_DEFAULT_AWS_SECRET_ACCESS_KEY,
+                "JWT_SECRET": NOVU_DEFAULT_JWT_SECRET,
+                "STORE_ENCRYPTION_KEY": NOVU_DEFAULT_STORE_ENCRYPTION_KEY,
+                "SENTRY_DSN": NOVU_DEFAULT_SENTRY_DSN,
+                "NEW_RELIC_APP_NAME": NOVU_DEFAULT_NEW_RELIC_APP_NAME,
+                "NEW_RELIC_LICENSE_KEY": NOVU_DEFAULT_NEW_RELIC_LICENSE_KEY,
+                "API_CONTEXT_PATH": NOVU_DEFAULT_API_CONTEXT_PATH
             },
             public_ports={
                 NOVU_API_PORT_NAME: PortSpec(number=NOVU_API_PORT),
@@ -229,17 +220,17 @@ def run(plan, args):
                 "REDIS_DB_INDEX": redis_db_index,
                 "REDIS_CACHE_SERVICE_HOST": redis_host,
                 "REDIS_CACHE_SERVICE_PORT": redis_port,
-                "S3_LOCAL_STACK": NOVU_ENV_VAR_DEFAULT_S3_LOCAL_STACK,
-                "S3_BUCKET_NAME": NOVU_ENV_VAR_DEFAULT_S3_BUCKET_NAME,
-                "S3_REGION": NOVU_ENV_VAR_DEFAULT_S3_REGION,
-                "AWS_ACCESS_KEY_ID": NOVU_ENV_VAR_DEFAULT_AWS_ACCESS_KEY_ID,
-                "AWS_SECRET_ACCESS_KEY": NOVU_ENV_VAR_DEFAULT_AWS_SECRET_ACCESS_KEY,
-                "JWT_SECRET": NOVU_ENV_VAR_DEFAULT_JWT_SECRET,
-                "STORE_ENCRYPTION_KEY": NOVU_ENV_VAR_DEFAULT_STORE_ENCRYPTION_KEY,
-                "SENTRY_DSN": NOVU_ENV_VAR_DEFAULT_SENTRY_DSN,
-                "NEW_RELIC_APP_NAME": NOVU_ENV_VAR_DEFAULT_NEW_RELIC_APP_NAME,
-                "NEW_RELIC_LICENSE_KEY": NOVU_ENV_VAR_DEFAULT_NEW_RELIC_LICENSE_KEY,
-                "API_CONTEXT_PATH": NOVU_ENV_VAR_DEFAULT_API_CONTEXT_PATH
+                "S3_LOCAL_STACK": NOVU_DEFAULT_S3_LOCAL_STACK,
+                "S3_BUCKET_NAME": NOVU_DEFAULT_S3_BUCKET_NAME,
+                "S3_REGION": NOVU_DEFAULT_S3_REGION,
+                "AWS_ACCESS_KEY_ID": NOVU_DEFAULT_AWS_ACCESS_KEY_ID,
+                "AWS_SECRET_ACCESS_KEY": NOVU_DEFAULT_AWS_SECRET_ACCESS_KEY,
+                "JWT_SECRET": NOVU_DEFAULT_JWT_SECRET,
+                "STORE_ENCRYPTION_KEY": NOVU_DEFAULT_STORE_ENCRYPTION_KEY,
+                "SENTRY_DSN": NOVU_DEFAULT_SENTRY_DSN,
+                "NEW_RELIC_APP_NAME": NOVU_DEFAULT_NEW_RELIC_APP_NAME,
+                "NEW_RELIC_LICENSE_KEY": NOVU_DEFAULT_NEW_RELIC_LICENSE_KEY,
+                "API_CONTEXT_PATH": NOVU_DEFAULT_API_CONTEXT_PATH
             }
         ),
     )
@@ -262,8 +253,8 @@ def run(plan, args):
                 "MONGO_URL": mongodb_url,
                 "REDIS_HOST": redis_host,
                 "REDIS_PORT": redis_port,
-                "WS_CONTEXT_PATH": NOVU_ENV_VAR_DEFAULT_WS_CONTEXT_PATH,
-                "JWT_SECRET": NOVU_ENV_VAR_DEFAULT_JWT_SECRET
+                "WS_CONTEXT_PATH": NOVU_DEFAULT_WS_CONTEXT_PATH,
+                "JWT_SECRET": NOVU_DEFAULT_JWT_SECRET
             },
             public_ports={
                 NOVO_WS_PORT_NAME: PortSpec(number=NOVU_WS_PORT),
