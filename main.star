@@ -10,8 +10,12 @@ NOVU_REDIS_DB_INDEX = 2
 # MongoDB
 MONGODB_IMAGE = "mongo:latest"
 MONGODB_NAME_ARG = "name"
-MONGODB_NAME="mongodb"
-NOVU_MONGODB_DB = "novu-db"
+MONGODB_SERVICE_NAME = "mongodb"
+MONGODB_ROOT_USERNAME = "root"
+MONGODB_ROOT_PASSWORD = "password"
+NOVU_MONGO_USERNAME = "novu"
+NOVU_MONGO_PASSWORD = "novu"
+NOVU_MONGODB_DB_NAME = "novu-db"
 
 # NOVU shared settings
 NOVU_VERSION = "0.14.0"
@@ -65,7 +69,6 @@ NOVU_WEB_PORT = 4200
 # NOVU_WEB_PROTOCOL_NAME = "http"
 # NOVU_WEB_PORT = 4200
 
-
 WAIT_DISABLE = None
 
 # NOVU API
@@ -91,35 +94,49 @@ NOVU_ENV_VAR_DEFAULT_NEW_RELIC_LICENSE_KEY = ""
 NOVU_ENV_VAR_DEFAULT_API_CONTEXT_PATH = ""
 
 def run(plan, args):
+
+    FRONT_BASE_URL = NOVU_ENV_VAR_DEFAULT_FRONT_BASE_URL
+
     redis_run_output = redis_module.run(plan, args)
+    redis_host = redis_run_output["hostname"]
+    redis_port = str(redis_run_output["client-port"])
+    redis_db_index = str(NOVU_REDIS_DB_INDEX)
     plan.print(redis_run_output)
 
     mongodb_env_vars = {
-        "user": "root",
-        "password": "example",
+        "user": MONGODB_ROOT_USERNAME,
+        "password": MONGODB_ROOT_PASSWORD,
         "image": MONGODB_IMAGE,
-        MONGODB_NAME_ARG: MONGODB_NAME,
-        "MONGO_INITDB_DATABASE": NOVU_MONGODB_DB,
+        MONGODB_NAME_ARG: MONGODB_SERVICE_NAME,
         "env_vars": {
             "PUID": "1000",
             "PGID": "1000",
         }}
     mongodb_module_output = mongodb_module.run(plan, mongodb_env_vars)
+    mongodb_service_port = mongodb_module_output.service.ports['mongodb'].number
     #mongodb_url = mongodb_module_output.url+NOVU_MONGODB_DB
-    mongodb_url = "mongodb://novu:novu@mongodb:27017/novu-db" # (mongodb_module_output.service.name,mongodb_module_output.service.)
+    mongodb_url = "mongodb://%s:%s@%s:%d/%s" % (
+        NOVU_MONGO_USERNAME,
+        NOVU_MONGO_PASSWORD,
+        MONGODB_SERVICE_NAME,
+        mongodb_service_port,
+        NOVU_MONGODB_DB_NAME
+    )
     plan.print(mongodb_url)
 
     # create user
-    command = "db.getSiblingDB('novu-db').createUser({user:'novu', pwd:'novu', roles:[{role:'readWrite',db:'novu-db'}]});"
+    command_create_user = "db.getSiblingDB('%s').createUser({user:'%s', pwd:'%s', roles:[{role:'readWrite',db:'%s'}]});" % (
+        NOVU_MONGODB_DB_NAME, NOVU_MONGO_USERNAME, NOVU_MONGO_PASSWORD, NOVU_MONGODB_DB_NAME
+    )
     exec_create_user = ExecRecipe(
         command=[
             "mongosh",
             "-u",
-            "root",
+            MONGODB_ROOT_USERNAME,
             "-p",
-            "example",
+            MONGODB_ROOT_PASSWORD,
             "-eval",
-            command
+            command_create_user
         ],
     )
     plan.wait(
@@ -131,11 +148,13 @@ def run(plan, args):
         timeout="30s",
     )
 
-    command_create_collection = "db.getSiblingDB('novu-db').createCollection('novu-db');"
+    command_create_collection = "db.getSiblingDB('%s').createCollection('%s');" % (
+        NOVU_MONGODB_DB_NAME, NOVU_MONGODB_DB_NAME
+    )
     exec_create_collection = ExecRecipe(
         command=[
             "mongosh",
-            "mongodb://localhost:27017/novu-db",
+            "mongodb://localhost:%d/%s" % (mongodb_service_port, NOVU_MONGODB_DB_NAME),
             "-u",
             "novu",
             "-p",
@@ -152,11 +171,6 @@ def run(plan, args):
         target_value=0,
         timeout="30s",
     )
-
-    REDIS_HOST = redis_run_output["hostname"]
-    REDIS_PORT = str(redis_run_output["client-port"])
-    REDIS_DB_INDEX = str(NOVU_REDIS_DB_INDEX)
-    FRONT_BASE_URL = NOVU_ENV_VAR_DEFAULT_FRONT_BASE_URL
 
     # Add Novu API
     novu_api_service = plan.add_service(
@@ -175,13 +189,13 @@ def run(plan, args):
                 "API_ROOT_URL": "",
                 "DISABLE_USER_REGISTRATION": NOVU_ENV_VAR_DEFAULT_DISABLE_USER_REGISTRATION,
                 "PORT": str(NOVU_API_PORT),
-                "FRONT_BASE_URL":FRONT_BASE_URL,
+                "FRONT_BASE_URL": FRONT_BASE_URL,
                 "MONGO_URL": mongodb_url,
-                "REDIS_HOST": REDIS_HOST,
-                "REDIS_PORT": REDIS_PORT,
-                "REDIS_DB_INDEX": REDIS_DB_INDEX,
-                "REDIS_CACHE_SERVICE_HOST": REDIS_HOST,
-                "REDIS_CACHE_SERVICE_PORT": REDIS_PORT,
+                "REDIS_HOST": redis_host,
+                "REDIS_PORT": redis_port,
+                "REDIS_DB_INDEX": redis_db_index,
+                "REDIS_CACHE_SERVICE_HOST": redis_host,
+                "REDIS_CACHE_SERVICE_PORT": redis_port,
                 "S3_LOCAL_STACK": NOVU_ENV_VAR_DEFAULT_S3_LOCAL_STACK,
                 "S3_BUCKET_NAME": NOVU_ENV_VAR_DEFAULT_S3_BUCKET_NAME,
                 "S3_REGION": NOVU_ENV_VAR_DEFAULT_S3_REGION,
@@ -210,11 +224,11 @@ def run(plan, args):
             env_vars={
                 "NODE_ENV": NOVU_NODE_ENV,
                 "MONGO_URL": mongodb_url,
-                "REDIS_HOST": REDIS_HOST,
-                "REDIS_PORT": REDIS_PORT,
-                "REDIS_DB_INDEX": REDIS_DB_INDEX,
-                "REDIS_CACHE_SERVICE_HOST": REDIS_HOST,
-                "REDIS_CACHE_SERVICE_PORT": REDIS_PORT,
+                "REDIS_HOST": redis_host,
+                "REDIS_PORT": redis_port,
+                "REDIS_DB_INDEX": redis_db_index,
+                "REDIS_CACHE_SERVICE_HOST": redis_host,
+                "REDIS_CACHE_SERVICE_PORT": redis_port,
                 "S3_LOCAL_STACK": NOVU_ENV_VAR_DEFAULT_S3_LOCAL_STACK,
                 "S3_BUCKET_NAME": NOVU_ENV_VAR_DEFAULT_S3_BUCKET_NAME,
                 "S3_REGION": NOVU_ENV_VAR_DEFAULT_S3_REGION,
@@ -246,10 +260,10 @@ def run(plan, args):
                 "PORT": str(NOVU_WS_PORT),
                 "NODE_ENV": NOVU_NODE_ENV,
                 "MONGO_URL": mongodb_url,
-                "REDIS_HOST": REDIS_HOST,
-                "REDIS_PORT": REDIS_PORT,
+                "REDIS_HOST": redis_host,
+                "REDIS_PORT": redis_port,
                 "WS_CONTEXT_PATH": NOVU_ENV_VAR_DEFAULT_WS_CONTEXT_PATH,
-                "JWT_SECRET":NOVU_ENV_VAR_DEFAULT_JWT_SECRET
+                "JWT_SECRET": NOVU_ENV_VAR_DEFAULT_JWT_SECRET
             },
             public_ports={
                 NOVO_WS_PORT_NAME: PortSpec(number=NOVU_WS_PORT),
@@ -342,7 +356,7 @@ def run(plan, args):
 
     REACT_APP_API_URL = "http://%s:%d" % (NGINX_HOST, NOVU_API_PORT)
     REACT_APP_WS_URL = "http://%s:%d" % (NGINX_HOST, NOVU_WS_PORT)
-    REACT_APP_WIDGET_EMBED_PATH = "http://%s:%d/embed.umd.min.js" % (NGINX_HOST,NOVU_EMBED_PORT)
+    REACT_APP_WIDGET_EMBED_PATH = "http://%s:%d/embed.umd.min.js" % (NGINX_HOST, NOVU_EMBED_PORT)
 
     #Add Novu Web Service
     novu_web_service = plan.add_service(
@@ -382,4 +396,5 @@ def run(plan, args):
 
 
 def getUrl(service, port_name):
-    return "%s://%s:%d" % (service.ports[port_name].application_protocol, service.hostname, service.ports[port_name].number)
+    return "%s://%s:%d" % (
+    service.ports[port_name].application_protocol, service.hostname, service.ports[port_name].number)
