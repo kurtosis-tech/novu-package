@@ -62,13 +62,6 @@ NOVO_WEB_PORT_NAME = NOVU_WEB_SERVICE_NAME
 NOVU_WEB_PROTOCOL_NAME = "http"
 NOVU_WEB_PORT = 4200
 
-# # NOVU Notification demo
-# NOVU_WEB_IMAGE = "ghcr.io/novuhq/novu/web:%s" % NOVU_VERSION
-# NOVU_WEB_SERVICE_NAME = "novu_web"
-# NOVO_WEB_PORT_NAME = NOVU_WEB_SERVICE_NAME
-# NOVU_WEB_PROTOCOL_NAME = "http"
-# NOVU_WEB_PORT = 4200
-
 WAIT_DISABLE = None
 
 # NOVU Shared
@@ -198,9 +191,6 @@ def run(plan, args):
                 "NEW_RELIC_APP_NAME": NOVU_DEFAULT_NEW_RELIC_APP_NAME,
                 "NEW_RELIC_LICENSE_KEY": NOVU_DEFAULT_NEW_RELIC_LICENSE_KEY,
                 "API_CONTEXT_PATH": NOVU_DEFAULT_API_CONTEXT_PATH
-            },
-            public_ports={
-                NOVU_API_PORT_NAME: PortSpec(number=NOVU_API_PORT),
             }
         ),
     )
@@ -255,9 +245,6 @@ def run(plan, args):
                 "REDIS_PORT": redis_port,
                 "WS_CONTEXT_PATH": NOVU_DEFAULT_WS_CONTEXT_PATH,
                 "JWT_SECRET": NOVU_DEFAULT_JWT_SECRET
-            },
-            public_ports={
-                NOVO_WS_PORT_NAME: PortSpec(number=NOVU_WS_PORT),
             }
         ),
     )
@@ -281,9 +268,6 @@ def run(plan, args):
                 "REACT_APP_WS_URL": ws_url,
                 "REACT_APP_ENVIRONMENT": NOVU_NODE_ENV,
                 "WIDGET_CONTEXT_PATH": NOVU_WIDGET_CONTEXT_PATH,
-            },
-            public_ports={
-                NOVO_WIDGET_PORT_NAME: PortSpec(number=NOVU_WIDGET_PORT),
             }
         ),
     )
@@ -303,9 +287,6 @@ def run(plan, args):
             },
             env_vars={
                 "WIDGET_URL": widget_url,
-            },
-            public_ports={
-                NOVO_EMBED_PORT_NAME: PortSpec(number=NOVU_EMBED_PORT),
             }
         ),
     )
@@ -314,6 +295,9 @@ def run(plan, args):
     widget_embed_path = widget_embed_url + "/embed.umd.min.js"
     plan.print(api_root_url)
 
+    # REACT_APP_API_URL = "http://%s:%d" % (NGINX_HOST, NOVU_API_PORT)
+    # REACT_APP_WS_URL = "http://%s:%d" % (NGINX_HOST, NOVU_WS_PORT)
+    # REACT_APP_WIDGET_EMBED_PATH = "http://%s:%d/embed.umd.min.js" % (NGINX_HOST, NOVU_EMBED_PORT)
     # # Add Novu Web Service
     # novu_web_service = plan.add_service(
     #     name=NOVU_WEB_SERVICE_NAME,
@@ -333,21 +317,14 @@ def run(plan, args):
     #             "REACT_APP_DOCKER_HOSTED_ENV": NOVU_DOCKER_HOSTED,
     #             "REACT_APP_WS_URL": ws_url,
     #         },
-    #         public_ports={
-    #             NOVO_WEB_PORT_NAME: PortSpec(number=NOVU_WEB_PORT),
-    #         }
     #     ),
     # )
 
     NGINX_HOST = "localhost"
-    # NGINX_PORT = 80
-    # REACT_APP_API_URL = "http://%s:%d/api" % (NGINX_HOST,NGINX_PORT)
-    # REACT_APP_WS_URL = "http://%s:%d" % (NGINX_HOST,NGINX_PORT)
-    # REACT_APP_WIDGET_EMBED_PATH = "http://%s:%d/widget_embed/embed.umd.min.js" % (NGINX_HOST,NGINX_PORT)
-
-    REACT_APP_API_URL = "http://%s:%d" % (NGINX_HOST, NOVU_API_PORT)
-    REACT_APP_WS_URL = "http://%s:%d" % (NGINX_HOST, NOVU_WS_PORT)
-    REACT_APP_WIDGET_EMBED_PATH = "http://%s:%d/embed.umd.min.js" % (NGINX_HOST, NOVU_EMBED_PORT)
+    NGINX_PORT = 80
+    REACT_APP_API_URL = "http://%s:%d/api" % (NGINX_HOST,NGINX_PORT)
+    REACT_APP_WS_URL = "http://%s:%d" % (NGINX_HOST,NGINX_PORT)
+    REACT_APP_WIDGET_EMBED_PATH = "http://%s:%d/widget_embed/embed.umd.min.js" % (NGINX_HOST,NGINX_PORT)
 
     #Add Novu Web Service
     novu_web_service = plan.add_service(
@@ -367,24 +344,17 @@ def run(plan, args):
                 "REACT_APP_WIDGET_EMBED_PATH": REACT_APP_WIDGET_EMBED_PATH,
                 "REACT_APP_DOCKER_HOSTED_ENV": NOVU_DOCKER_HOSTED,
                 "REACT_APP_WS_URL": REACT_APP_WS_URL,
-            },
-            public_ports={
-                NOVO_WEB_PORT_NAME: PortSpec(number=NOVU_WEB_PORT),
             }
         ),
     )
-    #
-    # file = plan.upload_files(
-    #     src = "github.com/kurtosis-tech/novu-package/nginx.conf@anders/novu",
-    #     name = "test"
-    # )
-    # args = {
-    #     "config_files_artifact": "test"
-    # }
-    # nginx_package.run(plan, args)
+
+    plan.upload_files(
+        src = "github.com/kurtosis-tech/novu-package/nginx.conf@anders/novu",
+        name = "test"
+    )
+    nginx_package.run(plan, args = {"config_files_artifact": "test"})
 
     return
-
 
 def getUrl(service, port_name):
     return "%s://%s:%d" % (
