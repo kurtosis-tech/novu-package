@@ -13,7 +13,7 @@ kurtosis run github.com/kurtosis-tech/novu-package
 
 <!-- TODO Add a URL-encoded version of github.com/YOURUSER/THISREPO to right after "KURTOSIS_PACKAGE_LOCATOR=" in the link below -->
 <!-- TODO You can URL-encode a string using https://www.urlencoder.org/ -->
-If you don't have Kurtosis installed, [click here to run this package on the Kurtosis playground](https://gitpod.io/#KURTOSIS_PACKAGE_LOCATOR=github.com%2Fkurtosis-tech%2Fnovu-package).
+If you don't have Kurtosis installed, [click here to run this package on the Kurtosis playground](https://gitpod.io/#KURTOSIS_PACKAGE_LOCATOR=github.com%2Fkurtosis-tech%2Fnovu-package/https://github.com/kurtosis-tech/playground-gitpod).
 
 To blow away the created [enclave][enclaves-reference], run `kurtosis clean -a`.
 
