@@ -1,4 +1,4 @@
-My Package
+Novu Package
 ============
 This is a Novu [Kurtosis package](https://docs.kurtosis.com/concepts-reference/packages).
 
