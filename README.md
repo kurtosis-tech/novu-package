@@ -8,7 +8,7 @@ If you have [Kurtosis installed][install-kurtosis], run:
 
 <!-- TODO replace YOURUSER and THISREPO with the correct values -->
 ```bash
-kurtosis run github.com/kurtosis-tech/novu-package
+kurtosis run github.com/kurtosis-tech/novu-package --enclave nuvo
 ```
 
 <!-- TODO Add a URL-encoded version of github.com/YOURUSER/THISREPO to right after "KURTOSIS_PACKAGE_LOCATOR=" in the link below -->

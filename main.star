@@ -77,9 +77,14 @@ NOVU_DEFAULT_NEW_RELIC_APP_NAME = ""
 NOVU_DEFAULT_NEW_RELIC_LICENSE_KEY = ""
 NOVU_DEFAULT_API_CONTEXT_PATH = ""
 
+ENABLE_HEALTH_CHECK = True
+DEFAULT_HEALTH_CHECK_TIMEOUT = "120s"
 WAIT_DISABLE = None
 
+
 def run(plan, args):
+    health_check_enabled = args.get("health_check", ENABLE_HEALTH_CHECK)
+
     redis_run_output = redis_module.run(plan, args)
     redis_host = redis_run_output["hostname"]
     redis_port = str(redis_run_output["client-port"])
@@ -263,7 +268,29 @@ def run(plan, args):
     )
     plan.print("The web configuration can be accessed on: http://%s:%s" % (host, NOVU_WEB_PORT))
 
+    if health_check_enabled:
+        plan.print("Health check enabled, probing for API to become available...")
+        # It can take a while for all containers to complete the initialization, so we wait for the API to become healthy:
+        api_health_check_recipe = GetHttpRequestRecipe(
+            port_id=NOVU_API_PORT_NAME,
+            endpoint="/v1/health-check",
+        )
+
+        plan.wait(
+            service_name=NOVU_API_SERVICE_NAME,
+            recipe=api_health_check_recipe,
+            field="code",
+            assertion="==",
+            target_value=200,
+            timeout=DEFAULT_HEALTH_CHECK_TIMEOUT,
+        )
+    else:
+        plan.print("Health-check disabled.")
+
+    plan.print("All services successfully initialized!")
+
     return
+
 
 def startMongoDB(plan):
     mongodb_env_vars = {
@@ -336,6 +363,7 @@ def startMongoDB(plan):
     )
     return mongodb_url
 
+
 def getUrl(service, port_name):
     return "%s://%s:%d" % (
-    service.ports[port_name].application_protocol, service.hostname, service.ports[port_name].number)
+        service.ports[port_name].application_protocol, service.hostname, service.ports[port_name].number)
