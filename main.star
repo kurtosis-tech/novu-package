@@ -84,6 +84,7 @@ WAIT_DISABLE = None
 
 def run(plan, args):
     health_check_enabled = args.get("health_check", ENABLE_HEALTH_CHECK)
+    plan.print("Running with health-check: %s" %health_check_enabled)
 
     redis_run_output = redis_module.run(plan, args)
     redis_host = redis_run_output["hostname"]
