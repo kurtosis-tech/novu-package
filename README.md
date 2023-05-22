@@ -17,6 +17,11 @@ If you don't have Kurtosis installed, [click here to run this package on the Kur
 
 To blow away the created [enclave][enclaves-reference], run `kurtosis clean -a`.
 
+## Interacting with the package
+
+Once the script finishes installing and Novu services have finished starting (note the time to load can vary depending on the resources available),
+the Novu controller app can be found on `localhost:4200`.  
+
 #### Configuration
 
 <details>
