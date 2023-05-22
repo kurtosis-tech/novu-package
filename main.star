@@ -1,6 +1,8 @@
 redis_module = import_module("github.com/kurtosis-tech/redis-package/main.star")
 mongodb_module = import_module("github.com/kurtosis-tech/mongodb-package/main.star")
-nginx_package = import_module("github.com/adschwartz/nginx-package/main.star")
+
+# NOVU shared settings
+NOVU_VERSION = "0.14.0"
 
 # Redis
 NOVU_REDIS_PORT = 6379
@@ -16,26 +18,6 @@ MONGODB_ROOT_PASSWORD = "password"
 NOVU_MONGO_USERNAME = "novu"
 NOVU_MONGO_PASSWORD = "novu"
 NOVU_MONGODB_DB_NAME = "novu-db"
-
-# NOVU shared settings
-NOVU_VERSION = "0.14.0"
-NOVU_DOCKER_HOSTED = "true"
-NOVU_NODE_ENV = "local"
-NOVU_WIDGET_CONTEXT_PATH = ""
-NOVU_DISABLE_USER_REGISTRATION = "false"
-NOVU_FRONT_BASE_URL = "http://client:%d" % NOVU_WEB_PORT
-NOVU_DEFAULT_S3_LOCAL_STACK = "http://localhost:4566"
-NOVU_DEFAULT_S3_BUCKET_NAME = "novu-local"
-NOVU_DEFAULT_S3_REGION = "us-east-1"
-NOVU_DEFAULT_AWS_ACCESS_KEY_ID = "test"
-NOVU_DEFAULT_AWS_SECRET_ACCESS_KEY = "test"
-NOVU_DEFAULT_JWT_SECRET = "your-secret"
-NOVU_DEFAULT_WS_CONTEXT_PATH = ""
-NOVU_DEFAULT_STORE_ENCRYPTION_KEY = "<ENCRYPTION_KEY_MUST_BE_32_LONG>"
-NOVU_DEFAULT_SENTRY_DSN = ""
-NOVU_DEFAULT_NEW_RELIC_APP_NAME = ""
-NOVU_DEFAULT_NEW_RELIC_LICENSE_KEY = ""
-NOVU_DEFAULT_API_CONTEXT_PATH = ""
 
 # NOVU API
 NOVU_API_IMAGE = "ghcr.io/novuhq/novu/api:0.14.0"
@@ -75,6 +57,25 @@ NOVU_WEB_SERVICE_NAME = "novu_web"
 NOVO_WEB_PORT_NAME = NOVU_WEB_SERVICE_NAME
 NOVU_WEB_PROTOCOL_NAME = "http"
 NOVU_WEB_PORT = 4200
+
+# NOVU shared settings
+NOVU_DOCKER_HOSTED = "true"
+NOVU_NODE_ENV = "local"
+NOVU_WIDGET_CONTEXT_PATH = ""
+NOVU_DISABLE_USER_REGISTRATION = "false"
+NOVU_FRONT_BASE_URL = "http://client:%d" % NOVU_WEB_PORT
+NOVU_DEFAULT_S3_LOCAL_STACK = "http://localhost:4566"
+NOVU_DEFAULT_S3_BUCKET_NAME = "novu-local"
+NOVU_DEFAULT_S3_REGION = "us-east-1"
+NOVU_DEFAULT_AWS_ACCESS_KEY_ID = "test"
+NOVU_DEFAULT_AWS_SECRET_ACCESS_KEY = "test"
+NOVU_DEFAULT_JWT_SECRET = "your-secret"
+NOVU_DEFAULT_WS_CONTEXT_PATH = ""
+NOVU_DEFAULT_STORE_ENCRYPTION_KEY = "<ENCRYPTION_KEY_MUST_BE_32_LONG>"
+NOVU_DEFAULT_SENTRY_DSN = ""
+NOVU_DEFAULT_NEW_RELIC_APP_NAME = ""
+NOVU_DEFAULT_NEW_RELIC_LICENSE_KEY = ""
+NOVU_DEFAULT_API_CONTEXT_PATH = ""
 
 WAIT_DISABLE = None
 
@@ -189,6 +190,9 @@ def run(plan, args):
                 "NEW_RELIC_APP_NAME": NOVU_DEFAULT_NEW_RELIC_APP_NAME,
                 "NEW_RELIC_LICENSE_KEY": NOVU_DEFAULT_NEW_RELIC_LICENSE_KEY,
                 "API_CONTEXT_PATH": NOVU_DEFAULT_API_CONTEXT_PATH
+            },
+            public_ports={
+                NOVU_API_PORT_NAME: PortSpec(number=NOVU_API_PORT),
             }
         ),
     )
@@ -243,6 +247,9 @@ def run(plan, args):
                 "REDIS_PORT": redis_port,
                 "WS_CONTEXT_PATH": NOVU_DEFAULT_WS_CONTEXT_PATH,
                 "JWT_SECRET": NOVU_DEFAULT_JWT_SECRET
+            },
+            public_ports={
+                NOVO_WS_PORT_NAME: PortSpec(number=NOVU_WS_PORT),
             }
         ),
     )
@@ -286,43 +293,17 @@ def run(plan, args):
             env_vars={
                 "WIDGET_URL": widget_url,
             }
+            ,
+            public_ports={
+                NOVO_EMBED_PORT_NAME: PortSpec(number=NOVU_EMBED_PORT),
+            }
         ),
     )
 
-    widget_embed_url = getUrl(novu_embed_service, NOVO_EMBED_PORT_NAME)
-    widget_embed_path = widget_embed_url + "/embed.umd.min.js"
-    plan.print(api_root_url)
-
-    # REACT_APP_API_URL = "http://%s:%d" % (NGINX_HOST, NOVU_API_PORT)
-    # REACT_APP_WS_URL = "http://%s:%d" % (NGINX_HOST, NOVU_WS_PORT)
-    # REACT_APP_WIDGET_EMBED_PATH = "http://%s:%d/embed.umd.min.js" % (NGINX_HOST, NOVU_EMBED_PORT)
-    # # Add Novu Web Service
-    # novu_web_service = plan.add_service(
-    #     name=NOVU_WEB_SERVICE_NAME,
-    #     config=ServiceConfig(
-    #         image=NOVU_WEB_IMAGE,
-    #         ports={
-    #             NOVO_WEB_PORT_NAME: PortSpec(
-    #                 number=NOVU_WEB_PORT,
-    #                 application_protocol=NOVU_WEB_PROTOCOL_NAME,
-    #                 wait=WAIT_DISABLE,
-    #             ),
-    #         },
-    #         env_vars={
-    #             "REACT_APP_API_URL": api_root_url,
-    #             "REACT_APP_ENVIRONMENT": NOVU_NODE_ENV,
-    #             "REACT_APP_WIDGET_EMBED_PATH": widget_embed_path,
-    #             "REACT_APP_DOCKER_HOSTED_ENV": NOVU_DOCKER_HOSTED,
-    #             "REACT_APP_WS_URL": ws_url,
-    #         },
-    #     ),
-    # )
-
-    NGINX_HOST = "localhost"
-    NGINX_PORT = 80
-    REACT_APP_API_URL = "http://%s:%d/api" % (NGINX_HOST,NGINX_PORT)
-    REACT_APP_WS_URL = "http://%s:%d" % (NGINX_HOST,NGINX_PORT)
-    REACT_APP_WIDGET_EMBED_PATH = "http://%s:%d/widget_embed/embed.umd.min.js" % (NGINX_HOST,NGINX_PORT)
+    host = "localhost"
+    react_app_api_url = "http://%s:%d" % (host, NOVU_API_PORT)
+    react_app_ws_url = "http://%s:%d" % (host, NOVU_WS_PORT)
+    react_app_widget_embed_path = "http://%s:%d/embed.umd.min.js" % (host, NOVU_EMBED_PORT)
 
     #Add Novu Web Service
     novu_web_service = plan.add_service(
@@ -337,20 +318,17 @@ def run(plan, args):
                 ),
             },
             env_vars={
-                "REACT_APP_API_URL": REACT_APP_API_URL,
+                "REACT_APP_API_URL": react_app_api_url,
                 "REACT_APP_ENVIRONMENT": NOVU_NODE_ENV,
-                "REACT_APP_WIDGET_EMBED_PATH": REACT_APP_WIDGET_EMBED_PATH,
+                "REACT_APP_WIDGET_EMBED_PATH": react_app_widget_embed_path,
                 "REACT_APP_DOCKER_HOSTED_ENV": NOVU_DOCKER_HOSTED,
-                "REACT_APP_WS_URL": REACT_APP_WS_URL,
+                "REACT_APP_WS_URL": react_app_ws_url,
+            },
+            public_ports={
+                NOVO_WEB_PORT_NAME: PortSpec(number=NOVU_WEB_PORT),
             }
         ),
     )
-
-    plan.upload_files(
-        src = "github.com/kurtosis-tech/novu-package/nginx.conf@anders/novu",
-        name = "test"
-    )
-    nginx_package.run(plan, args = {"config_files_artifact": "test"})
 
     return
 
