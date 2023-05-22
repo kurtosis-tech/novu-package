@@ -187,7 +187,7 @@ def run(plan, args):
     )
     ws_url = getUrl(novu_ws_service, NOVO_WS_PORT_NAME)
 
-    # Add Novu Widget Service (depends on Nuvo WS service)
+    # Add Novu Widget Service (depends on Novu WS service)
     novu_widget_service = plan.add_service(
         name=NOVU_WIDGET_SERVICE_NAME,
         config=ServiceConfig(
