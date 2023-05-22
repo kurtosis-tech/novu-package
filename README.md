@@ -6,9 +6,18 @@ Run this package
 ----------------
 If you have [Kurtosis installed][install-kurtosis], run:
 
-<!-- TODO replace YOURUSER and THISREPO with the correct values -->
 ```bash
-kurtosis run github.com/kurtosis-tech/novu-package
+kurtosis run github.com/kurtosis-tech/novu-package --enclave nuvo
+```
+
+Note, this package implements an API health-check that is enabled by default. 
+The health-check ensures that the initialization by Kurtosis doesn't complete before the Novu API is healthy.
+This is useful, to avoid interacting with Novu services before they are ready. 
+Depending on your resources, it may take a while before the health-check completes. 
+If you want to disable the health-check, run the following command:
+
+```bash
+kurtosis run github.com/kurtosis-tech/novu-package --enclave nuvo '{"health_check":false}'
 ```
 
 <!-- TODO Add a URL-encoded version of github.com/YOURUSER/THISREPO to right after "KURTOSIS_PACKAGE_LOCATOR=" in the link below -->
