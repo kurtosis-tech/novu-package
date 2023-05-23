@@ -7,7 +7,7 @@ Run this package
 If you have [Kurtosis installed][install-kurtosis], run:
 
 ```bash
-kurtosis run github.com/kurtosis-tech/novu-package --enclave nuvo
+kurtosis run github.com/kurtosis-tech/novu-package --enclave novu
 ```
 
 Note, this package implements an API health-check that is enabled by default. 
@@ -17,12 +17,12 @@ Depending on your resources, it may take a while before the health-check complet
 If you want to disable the health-check, run the following command:
 
 ```bash
-kurtosis run github.com/kurtosis-tech/novu-package --enclave nuvo '{"health_check":false}'
+kurtosis run github.com/kurtosis-tech/novu-package --enclave novu '{"health_check":false}'
 ```
 
-<!-- TODO Add a URL-encoded version of github.com/YOURUSER/THISREPO to right after "KURTOSIS_PACKAGE_LOCATOR=" in the link below -->
+<!-- TODO Add a URL-encoded version of github.com/YOURUSER/THISREPO to right after "KURTOSIS_PACKAGE_LOCATION=" in the link below -->
 <!-- TODO You can URL-encode a string using https://www.urlencoder.org/ -->
-If you don't have Kurtosis installed, [click here to run this package on the Kurtosis playground](https://gitpod.io/#KURTOSIS_PACKAGE_LOCATOR=github.com%2Fkurtosis-tech%2Fnovu-package/https://github.com/kurtosis-tech/playground-gitpod).
+If you don't have Kurtosis installed, [click here to run this package on the Kurtosis playground](https://gitpod.io/#KURTOSIS_PACKAGE_LOCATION=github.com%2Fkurtosis-tech%2Fnovu-package/https://github.com/kurtosis-tech/playground-gitpod).
 
 To blow away the created [enclave][enclaves-reference], run `kurtosis clean -a`.
 
