@@ -7,7 +7,7 @@ Run this package
 If you have [Kurtosis installed][install-kurtosis], run:
 
 ```bash
-kurtosis run github.com/kurtosis-tech/novu-package --enclave nuvo
+kurtosis run github.com/kurtosis-tech/novu-package --enclave novu
 ```
 
 Note, this package implements an API health-check that is enabled by default. 
@@ -17,7 +17,7 @@ Depending on your resources, it may take a while before the health-check complet
 If you want to disable the health-check, run the following command:
 
 ```bash
-kurtosis run github.com/kurtosis-tech/novu-package --enclave nuvo '{"health_check":false}'
+kurtosis run github.com/kurtosis-tech/novu-package --enclave novu '{"health_check":false}'
 ```
 
 <!-- TODO Add a URL-encoded version of github.com/YOURUSER/THISREPO to right after "KURTOSIS_PACKAGE_LOCATOR=" in the link below -->
@@ -41,10 +41,9 @@ You can configure this package using the JSON structure below. The default value
 NOTE: the `//` lines are not valid JSON; you will need to remove them!
 
 <!-- TODO Parameterize your package as you prefer; see https://docs.kurtosis.com/next/concepts-reference/args for more -->
-```javascript
+```json
 {
-    // The name to print
-    "name": "John Snow"
+  "name": "John Snow"
 }
 ```
 
