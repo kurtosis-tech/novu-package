@@ -41,10 +41,9 @@ You can configure this package using the JSON structure below. The default value
 NOTE: the `//` lines are not valid JSON; you will need to remove them!
 
 <!-- TODO Parameterize your package as you prefer; see https://docs.kurtosis.com/next/concepts-reference/args for more -->
-```javascript
+```json
 {
-    // The name to print
-    "name": "John Snow"
+  "name": "John Snow"
 }
 ```
 
